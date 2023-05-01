@@ -1,70 +1,127 @@
-# Getting Started with Create React App
+# Part2
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+#### 表单
 
-## Available Scripts
+```react
+const addNote = (event) => {
+  event.preventDefault()
+  console.log('button clicked', event.target)
+}
 
-In the project directory, you can run:
+// 事件处理程序立即调用event.preventDefault()方法，防止提交表单的默认动作。默认动作会，忽略其他操作，导致页面重新加载。
+// 防止刷新
+```
 
-### `npm start`
+#### 受控组件
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+通常会根据用户的输入来进行更新。即，不同时候使用 value 属性会得到当前状态下用户**直接输入**的值。
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```javascript
+// 受控组件
+<input type="text" value={newNote} onChange={handleChange}/>
+```
 
-### `npm test`
+#### 较为复杂的场景
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```react
+// App.js
+import {useState} from "react";
 
-### `npm run build`
+const App = (props) => {
+  const [notes, setNotes] = useState(props.notes)
+  const [newNote, setNewNote] = useState('')
+  const [showAll, setShowAll] = useState(true)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+  // 如何使用filter
+  const notesToShow = showAll ? notes : notes.filter(note => note.important === true)
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+  const addNote = (event) => {
+    event.preventDefault();
+    // 对象的操作  
+    const noteObject = {
+      id: notes.length + 1,
+      content: newNote,
+      date: new Date().toISOString(),
+      important: false
+    }
+    // 新增数组 concat
+    setNotes(notes.concat(noteObject))
+    setNewNote("")
+  }
+  // 事件中取值
+  const handleChange = (event) => {
+    console.log(event.target.value)
+    setNewNote(event.target.value)
+  }
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+  return (
+    <div>
+      <h1>Notes</h1>
+        // 事件处理函数    
+      <button onClick={() => {setShowAll(!showAll)}}>show{showAll ? true : false}</button>
+      <ul>
+        {
+          // 如何使用map
+          notesToShow.map(note => {
+            return <li key={note.id}>{note.content}</li>
+          })
+        }
+      </ul>
+      // 原生表单操作    
+      <form onSubmit={addNote}>
+        <input type="text" value={newNote} onChange={handleChange}/>
+        <button type="submit">提交</button>
+      </form>
+    </div>
+  )
+}
 
-### `npm run eject`
+export default App
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```react
+// index.js
+import React from 'react'
+import ReactDOM from 'react-dom/client'
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+import App from './App'
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+const notes = [
+  {
+    id: 1,
+    content: 'HTML is easy1',
+    date: '2019-05-30T17:30:31.098Z',
+    important: true
+  },
+  {
+    id: 2,
+    content: 'Browser can execute only JavaScript2',
+    date: '2019-05-30T18:39:34.091Z',
+    important: false
+  },
+  {
+    id: 3,
+    content: 'GET and POST are the most important methods of HTTP protocol',
+    date: '2019-05-30T19:20:14.298Z',
+    important: true
+  }
+]
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <App notes={notes} />
+)
+```
 
-## Learn More
+#### reduce 数组中含有对象的相加
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```react
+  const getSum = (parts) => {
+     // prev 最后的结果 cur 当前对象 0 代表从什么时候开始加
+      return parts.reduce((prev, cur ) => {
+        console.log(prev, cur)
+        return cur.exercises + prev
+      }, 0)
+  }
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+https://juejin.cn/post/6844903966145413128
