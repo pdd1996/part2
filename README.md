@@ -125,3 +125,24 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 ```
 
 https://juejin.cn/post/6844903966145413128
+
+#### useEffect
+
+*默认情况下，效果会在每次完成渲染后运行，但你可以选择只在某些值发生变化时启动它。*
+
+```react
+const hook = () => {
+  console.log('effect')
+  axios
+    .get('http://localhost:3001/notes')
+    .then(response => {
+      console.log('promise fulfilled')
+      setNotes(response.data)
+    })
+}
+
+useEffect(hook, [])
+
+// useEffect的第二个参数用于指定效果的运行频率。如果第二个参数是一个空的数组[]，那么效果就只在组件的第一次渲染时运行。
+```
+
