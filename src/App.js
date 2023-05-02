@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import {useEffect, useState} from 'react'
 import Filter from "./conponents/Filter";
 import PersonForm from "./conponents/PersonForm";
 import Persons from "./conponents/Persons";
+import axios from "axios";
 
 const App = () => {
+  const [notes, setNotes] = useState([])
   const [persons, setPersons] = useState([
     { name: 'Arto Hellas', phone: '040-123456', id: 1 },
     { name: 'Ada Lovelace', phone: '39-44-5323523', id: 2 },
@@ -14,6 +16,17 @@ const App = () => {
   const [phone, setPhone] = useState('')
   const [filterName, setFilterName] = useState('')
   const [personList, setPersonList] = useState([])
+
+  useEffect(() => {
+    console.log('effect')
+    axios
+      .get('http://localhost:3001/notes')
+      .then(res => {
+        console.log('fulfilled')
+        setNotes(res.data)
+      })
+  }, [])
+  console.log(notes.length, 'notes')
 
   const handleChange = (e) => {
     setNewName(e.target.value)
