@@ -7,6 +7,7 @@ const App = () => {
   const [countries, setCountries] = useState([])
   const [info, setInfo] = useState('')
   const [show, setShow] = useState(false)
+  const [weather, setWeather] = useState("")
 
   const toggleCountry = (e) => {
     const value = e.target.value
@@ -42,6 +43,15 @@ const App = () => {
         if (remaining.length <= 10 && remaining.length >= 1) {
           setCountries(remaining)
           setInfo('')
+          if(remaining.length == 1) {
+            console.log(remaining, "remaining")
+            const url = `https://api.openweathermap.org/data/2.5/weather?q=${remaining[0].name.common}&appid="t0p53cr3t4p1k3yv4lu3"`
+            console.log(url, "url")
+            axios
+              .get(url)
+              .then(res => {})
+
+          }
         }
       })
   }
@@ -54,7 +64,10 @@ const App = () => {
       }
       {
         countries.length === 1 ? countries.map(state =>
-          <Country state={state} />
+          <>
+            <Country state={state} />
+          </>
+
         ) : ''
       }
     </div>
