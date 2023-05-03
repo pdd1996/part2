@@ -1,83 +1,64 @@
-import {useEffect, useState} from 'react'
-import Filter from "./conponents/Filter";
-import PersonForm from "./conponents/PersonForm";
-import Persons from "./conponents/Persons";
+import {useState} from "react";
 import axios from "axios";
 
 const App = () => {
-  const [notes, setNotes] = useState([])
-  const [persons, setPersons] = useState([
-    { name: 'Arto Hellas', phone: '040-123456', id: 1 },
-    { name: 'Ada Lovelace', phone: '39-44-5323523', id: 2 },
-    { name: 'Dan Abramov', phone: '12-43-234345', id: 3 },
-    { name: 'Mary Poppendieck', phone: '39-23-6423122', id: 4 }
-  ])
-  const [newName, setNewName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [filterName, setFilterName] = useState('')
-  const [personList, setPersonList] = useState([])
+  const [country, setCountry] = useState('')
+  const [countries, setCountries] = useState([])
+  const [info, setInfo] = useState('')
 
-  useEffect(() => {
-    console.log('effect')
-    axios
-      .get('http://localhost:3001/notes')
-      .then(res => {
-        console.log('fulfilled')
-        setNotes(res.data)
-      })
-  }, [])
-  console.log(notes.length, 'notes')
-
-  const handleChange = (e) => {
-    setNewName(e.target.value)
-  }
-
-  const handleChangeToPhone = (e) => {
-    setPhone(e.target.value)
-  }
-
-  const addPerson = (e) => {
-    e.preventDefault()
-    const isExist = persons.some(person => {
-      if (person.name === newName) {
-        alert(`${newName} is already added to phonebook`)
-        return true;
-      }
-      return false
-    })
-
-    if(!isExist) {
-      setPersons(persons.concat({
-        name: newName,
-        phone,
-        id: persons.length + 1
-      }))
-      setNewName('')
-      setPhone('')
+  const toggleCountry = (e) => {
+    const value = e.target.value
+    console.log(value, "value")
+    setCountry(value)
+    if (value) {
+      getAllCountries(value)
+    }
+    if (!value) {
+      setCountries([])
+      setInfo('')
     }
   }
 
-  const toggleName = (e) => {
-    setFilterName(e.target.value)
-    const personList = persons.filter(person => {
-      // 都转成大写或者小写
-      return person.name.toUpperCase().match(e.target.value.toUpperCase())
-      }
-    )
-    setPersonList(personList)
+  const getAllCountries = (value) => {
+    axios.get('https://restcountries.com/v3.1/all')
+      .then(res => {
+        const listForCountry = res.data
+        const remaining = listForCountry.filter(country => country.name.common.toUpperCase().match(value.toUpperCase()))
+        console.log(remaining, "remaining")
+        if (remaining.length === 0) {
+          setCountries([])
+          setInfo('not found')
+        }
+        if(remaining.length > 10) {
+          setCountries([])
+          setInfo('Too many match, specify another filter')
+        }
+        if (remaining.length <= 10 && remaining.length >= 1) {
+          setCountries(remaining)
+          setInfo('')
+        }
+      })
   }
 
   return (
     <div>
-      <h2>Phonebook</h2>
-      <div>
-        <p>filter shown with</p>
-        <Filter value={filterName} onChange={toggleName} list={personList} />
-      </div>
-      <h2>add a new</h2>
-      <PersonForm onSubmit={addPerson} toggleName={handleChange} toggleNumber={handleChangeToPhone} name={newName} number={phone} />
-      <h2>Numbers</h2>
-      <Persons values={persons} />
+      <p>find countries <input value={country} onChange={toggleCountry} /></p>
+      {
+        info && countries.length === 0 ? info : countries.map(state => <p key={state.capital}>{state.name.common}</p>)
+      }
+      {
+        countries.length === 1 ? countries.map(state =>
+          <div key={state.capital}>
+            <p>capital - {state.capital}</p>
+            <p>area - {state.area}</p>
+            <h2>languages</h2>
+            <ul>
+              {Object.values(state.languages).map(lang => <li key={lang}>{lang}</li>)}
+            </ul>
+            <img alt="国旗" src={state.coatOfArms.png} />
+          </div>
+        ) : ''
+      }
     </div>
   )
 }

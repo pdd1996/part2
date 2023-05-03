@@ -146,3 +146,310 @@ useEffect(hook, [])
 // useEffect的第二个参数用于指定效果的运行频率。如果第二个参数是一个空的数组[]，那么效果就只在组件的第一次渲染时运行。
 ```
 
+#### Post Put
+
+```react
+import {useEffect, useState} from "react";
+import Note from "./conponents/Note";
+import axios from "axios";
+
+const App = () => {
+  const [notes, setNotes] = useState([])
+  const [newNote, setNewNote] = useState('')
+  const [showAll, setShowAll] = useState(true)
+
+  // 如何使用filter
+  const notesToShow = showAll ? notes : notes.filter(note => note.important === true)
+
+  useEffect(() => {
+    axios
+      .get('http://localhost:3001/notes')
+      .then(res => {
+        setNotes(res.data)
+      })
+  }, [])
+
+  const addNote = (event) => {
+    event.preventDefault();
+    // 对象的操作
+    const noteObject = {
+      id: notes.length + 1,
+      content: newNote,
+      date: new Date().toISOString(),
+      important: false
+    }
+    axios
+      .post('http://localhost:3001/notes', noteObject)
+      .then(res => {
+        // 新增数组 concat
+        setNotes(notes.concat(res.data))
+        setNewNote("")
+      })
+  }
+  // 事件中取值
+  const handleChange = (event) => {
+    console.log(event.target.value)
+    setNewNote(event.target.value)
+  }
+
+  const toggleImportanceOf = (id) => {
+    // put
+    const url = `http://localhost:3001/notes/${id}`
+    const note = notes.find(note => note.id === id)
+    const changedNote = { ...note, important: !note.important }
+    axios
+      .put(url, changedNote)
+      .then(res => {
+        console.log(res)
+        setNotes(notes.map(note => note.id !== id ? note : res.data))
+      })
+  }
+
+  return (
+    <div>
+      <h1>Notes</h1>
+      <button onClick={() => {setShowAll(!showAll)}}>show{showAll ? true : false}</button>
+      <ul>
+        {notesToShow.map(note =>
+          <Note
+            key={note.id}
+            note={note}
+            toggleImportance={() => toggleImportanceOf(note.id)}
+          />
+        )}
+      </ul>
+      <form onSubmit={addNote}>
+        <input type="text" value={newNote} onChange={handleChange}/>
+        <button type="submit">提交</button>
+      </form>
+    </div>
+  )
+}
+
+export default App
+```
+
+#### Note.js
+
+```react
+const Note = ({ note, toggleImportance }) => {
+  const label = note.important
+    ? 'make not important' : 'make important'
+
+  return (
+    <li>
+      {note.content}
+      <button onClick={toggleImportance}>{label}</button>
+    </li>
+  )
+}
+
+export default Note
+```
+
+#### 最终代码
+
+```react
+import {useEffect, useState} from "react";
+import Note from "./conponents/Note";
+import noteService  from './services/notes'
+import './index.css'
+
+const App = () => {
+  const [notes, setNotes] = useState([])
+  const [newNote, setNewNote] = useState('')
+  const [showAll, setShowAll] = useState(true)
+
+  // 如何使用filter
+  const notesToShow = showAll ? notes : notes.filter(note => note.important === true)
+
+  useEffect(() => {
+    noteService
+      .getAll()
+      .then(res => {
+        setNotes(res.data)
+      })
+  }, [])
+
+  const addNote = (event) => {
+    event.preventDefault();
+    // 对象的操作
+    const noteObject = {
+      id: notes.length + 1,
+      content: newNote,
+      date: new Date().toISOString(),
+      important: false
+    }
+    noteService
+      .create(noteObject)
+      .then(res => {
+        // 新增数组 concat
+        setNotes(notes.concat(res.data))
+        setNewNote("")
+      })
+  }
+  // 事件中取值
+  const handleChange = (event) => {
+    console.log(event.target.value)
+    setNewNote(event.target.value)
+  }
+
+  const toggleImportanceOf = (id) => {
+    // put
+    const note = notes.find(note => note.id === id)
+    const changedNote = { ...note, important: !note.important }
+    noteService
+      .update(id, changedNote)
+      .then(res => {
+        console.log(res)
+        setNotes(notes.map(note => note.id !== id ? note : res.data))
+      })
+      .catch(error => {
+        console.log(error)
+        alert(
+          `the note '${note.content}' was already deleted from server`
+        )
+        setNotes(notes.filter(n => n.id !== id))
+      })
+  }
+
+  return (
+    <div>
+      <h1>Notes</h1>
+      <button onClick={() => {setShowAll(!showAll)}}>show{showAll}</button>
+      <ul>
+        {notesToShow.map(note =>
+          <Note
+            key={note.id}
+            note={note}
+            toggleImportance={() => toggleImportanceOf(note.id)}
+          />
+        )}
+      </ul>
+      <form onSubmit={addNote}>
+        <input type="text" value={newNote} onChange={handleChange}/>
+        <button type="submit">提交</button>
+      </form>
+    </div>
+  )
+}
+
+export default App
+```
+
+```react
+import '../index.css'
+
+const Note = ({ note, toggleImportance }) => {
+  const label = note.important
+    ? 'make not important' : 'make important'
+
+  return (
+    <li className='note'>
+      {note.content}
+      <button onClick={toggleImportance}>{label}</button>
+    </li>
+  )
+}
+
+export default Note
+```
+
+```react
+import axios from "axios";
+
+const baseUrl = 'http://localhost:3001/notes'
+
+const getAll = () => {
+  return axios.get(baseUrl)
+}
+
+const create = (newObject) => {
+  return axios.post(baseUrl, newObject)
+}
+
+const update = (id, newObject) => {
+  return axios.put(`${baseUrl}/${id}`, newObject)
+}
+
+export default {
+  getAll,
+  create,
+  update
+}
+```
+### REST
+
+在REST术语中，我们把单个数据对象，如我们应用中的笔记，称为*资源*。**每个资源都有一个与之相关的唯一地址--它的URL**
+
+对URL *notes/3*的HTTP GET请求将返回ID为3的笔记。对*notes* URL的HTTP GET请求将返回所有笔记的列表。
+
+*notes* URL发出HTTP POST请求来创建一个用于存储笔记的新资源。新笔记资源的数据在请求的*body*中发送。
+
+```react
+import {useEffect, useState} from "react";
+import axios from "axios";
+
+const App = (props) => {
+  const [notes, setNotes] = useState([])
+  const [newNote, setNewNote] = useState('')
+  const [showAll, setShowAll] = useState(true)
+
+  // 如何使用filter
+  const notesToShow = showAll ? notes : notes.filter(note => note.important === true)
+
+  useEffect(() => {
+    console.log('effect')
+    axios
+      .get('http://localhost:3001/notes')
+      .then(response => {
+        console.log('promise fulfilled')
+        setNotes(response.data)
+      })
+  }, [])
+  console.log('render', notes.length, 'notes')
+
+  const addNote = (event) => {
+    event.preventDefault();
+    // 对象的操作
+    const noteObject = {
+      id: notes.length + 1,
+      content: newNote,
+      date: new Date().toISOString(),
+      important: false
+    }
+    // 新增数组 concat
+    setNotes(notes.concat(noteObject))
+    setNewNote("")
+  }
+  // 事件中取值
+  const handleChange = (event) => {
+    console.log(event.target.value)
+    setNewNote(event.target.value)
+  }
+
+  return (
+    <div>
+      <h1>Notes</h1>
+      <button onClick={() => {setShowAll(!showAll)}}>show{showAll ? true : false}</button>
+      <ul>
+        {
+          // 如何使用map
+          notesToShow.map(note => {
+            return <li key={note.id}>{note.content}</li>
+          })
+        }
+      </ul>
+      <form onSubmit={addNote}>
+        <input type="text" value={newNote} onChange={handleChange}/>
+        <button type="submit">提交</button>
+      </form>
+    </div>
+  )
+}
+
+export default App
+```
+
+我们可以用HTTP PUT请求来替换整个笔记，或者用HTTP PATCH请求只改变笔记的某些属性。
+
