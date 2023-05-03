@@ -55,7 +55,7 @@ const App = () => {
             <ul>
               {Object.values(state.languages).map(lang => <li key={lang}>{lang}</li>)}
             </ul>
-            <img alt="国旗" src={state.coatOfArms.png}></img>
+            <img alt="国旗" src={state.coatOfArms.png} />
           </div>
         ) : ''
       }
