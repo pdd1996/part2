@@ -1,10 +1,12 @@
 import {useState} from "react";
 import axios from "axios";
+import Country from "./conponents/Country";
 
 const App = () => {
   const [country, setCountry] = useState('')
   const [countries, setCountries] = useState([])
   const [info, setInfo] = useState('')
+  const [show, setShow] = useState(false)
 
   const toggleCountry = (e) => {
     const value = e.target.value
@@ -17,6 +19,10 @@ const App = () => {
       setCountries([])
       setInfo('')
     }
+  }
+
+  const handleClick = () => {
+    setShow(!show)
   }
 
   const getAllCountries = (value) => {
@@ -44,19 +50,11 @@ const App = () => {
     <div>
       <p>find countries <input value={country} onChange={toggleCountry} /></p>
       {
-        info && countries.length === 0 ? info : countries.map(state => <p key={state.capital}>{state.name.common}</p>)
+        info && countries.length === 0 ? info : countries.map(state => <p key={state.capital}>{state.name.common}<button onClick={handleClick}>show</button></p> )
       }
       {
         countries.length === 1 ? countries.map(state =>
-          <div key={state.capital}>
-            <p>capital - {state.capital}</p>
-            <p>area - {state.area}</p>
-            <h2>languages</h2>
-            <ul>
-              {Object.values(state.languages).map(lang => <li key={lang}>{lang}</li>)}
-            </ul>
-            <img alt="国旗" src={state.coatOfArms.png} />
-          </div>
+          <Country state={state} />
         ) : ''
       }
     </div>
