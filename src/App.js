@@ -8,25 +8,29 @@ const App = () => {
 
   const toggleCountry = (e) => {
     const value = e.target.value
-    // 无法获取最新值
+    console.log(value, "value")
+    setCountry(value)
     if (value) {
-      getAllCountries()
+      getAllCountries(value)
     }
     if (!value) {
       setCountries([])
+      setInfo('')
     }
-    setCountry(value)
   }
 
-  const getAllCountries = () => {
+  const getAllCountries = (value) => {
     axios.get('https://restcountries.com/v3.1/all')
       .then(res => {
         const listForCountry = res.data
-        const remaining = listForCountry.filter(state => state.name.common.toUpperCase().match(country.toUpperCase()))
+        const remaining = listForCountry.filter(country => country.name.common.toUpperCase().match(value.toUpperCase()))
+        console.log(remaining, "remaining")
         if (remaining.length === 0) {
+          setCountries([])
           setInfo('not found')
         }
         if(remaining.length > 10) {
+          setCountries([])
           setInfo('Too many match, specify another filter')
         }
         if (remaining.length <= 10 && remaining.length >= 1) {
@@ -40,7 +44,7 @@ const App = () => {
     <div>
       <p>find countries <input value={country} onChange={toggleCountry} /></p>
       {
-        country === '' && info && countries.length === 0 ? info : countries.map(state => <p key={state.capital}>{state.name.common}</p>)
+        info && countries.length === 0 ? info : countries.map(state => <p key={state.capital}>{state.name.common}</p>)
       }
       {
         countries.length === 1 ? countries.map(state =>
