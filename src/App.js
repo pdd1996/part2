@@ -1,83 +1,60 @@
-import {useEffect, useState} from "react";
-import Note from "./conponents/Note";
-import noteService  from './services/notes'
-import './index.css'
+import {useState} from "react";
+import axios from "axios";
 
 const App = () => {
-  const [notes, setNotes] = useState([])
-  const [newNote, setNewNote] = useState('')
-  const [showAll, setShowAll] = useState(true)
+  const [country, setCountry] = useState('')
+  const [countries, setCountries] = useState([])
+  const [info, setInfo] = useState('')
 
-  // 如何使用filter
-  const notesToShow = showAll ? notes : notes.filter(note => note.important === true)
-
-  useEffect(() => {
-    noteService
-      .getAll()
-      .then(res => {
-        setNotes(res.data)
-      })
-  }, [])
-
-  const addNote = (event) => {
-    event.preventDefault();
-    // 对象的操作
-    const noteObject = {
-      id: notes.length + 1,
-      content: newNote,
-      date: new Date().toISOString(),
-      important: false
+  const toggleCountry = (e) => {
+    const value = e.target.value
+    // 无法获取最新值
+    if (value) {
+      getAllCountries()
     }
-    noteService
-      .create(noteObject)
-      .then(res => {
-        // 新增数组 concat
-        setNotes(notes.concat(res.data))
-        setNewNote("")
-      })
-  }
-  // 事件中取值
-  const handleChange = (event) => {
-    console.log(event.target.value)
-    setNewNote(event.target.value)
+    if (!value) {
+      setCountries([])
+    }
+    setCountry(value)
   }
 
-  const toggleImportanceOf = (id) => {
-    // put
-    const note = notes.find(note => note.id === id)
-    const changedNote = { ...note, important: !note.important }
-    noteService
-      .update(id, changedNote)
+  const getAllCountries = () => {
+    axios.get('https://restcountries.com/v3.1/all')
       .then(res => {
-        console.log(res)
-        setNotes(notes.map(note => note.id !== id ? note : res.data))
-      })
-      .catch(error => {
-        console.log(error)
-        alert(
-          `the note '${note.content}' was already deleted from server`
-        )
-        setNotes(notes.filter(n => n.id !== id))
+        const listForCountry = res.data
+        const remaining = listForCountry.filter(state => state.name.common.toUpperCase().match(country.toUpperCase()))
+        if (remaining.length === 0) {
+          setInfo('not found')
+        }
+        if(remaining.length > 10) {
+          setInfo('Too many match, specify another filter')
+        }
+        if (remaining.length <= 10 && remaining.length >= 1) {
+          setCountries(remaining)
+          setInfo('')
+        }
       })
   }
 
   return (
     <div>
-      <h1>Notes</h1>
-      <button onClick={() => {setShowAll(!showAll)}}>show{showAll}</button>
-      <ul>
-        {notesToShow.map(note =>
-          <Note
-            key={note.id}
-            note={note}
-            toggleImportance={() => toggleImportanceOf(note.id)}
-          />
-        )}
-      </ul>
-      <form onSubmit={addNote}>
-        <input type="text" value={newNote} onChange={handleChange}/>
-        <button type="submit">提交</button>
-      </form>
+      <p>find countries <input value={country} onChange={toggleCountry} /></p>
+      {
+        country === '' && info && countries.length === 0 ? info : countries.map(state => <p key={state.capital}>{state.name.common}</p>)
+      }
+      {
+        countries.length === 1 ? countries.map(state =>
+          <div key={state.capital}>
+            <p>capital - {state.capital}</p>
+            <p>area - {state.area}</p>
+            <h2>languages</h2>
+            <ul>
+              {Object.values(state.languages).map(lang => <li key={lang}>{lang}</li>)}
+            </ul>
+            <img alt="国旗" src={state.coatOfArms.png}></img>
+          </div>
+        ) : ''
+      }
     </div>
   )
 }
