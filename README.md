@@ -377,5 +377,80 @@ export default {
   create,
   update
 }
+
 ```
 
+### REST
+
+在REST术语中，我们把单个数据对象，如我们应用中的笔记，称为*资源*。**每个资源都有一个与之相关的唯一地址--它的URL**
+
+对URL *notes/3*的HTTP GET请求将返回ID为3的笔记。对*notes* URL的HTTP GET请求将返回所有笔记的列表。
+
+*notes* URL发出HTTP POST请求来创建一个用于存储笔记的新资源。新笔记资源的数据在请求的*body*中发送。
+
+```react
+import {useEffect, useState} from "react";
+import axios from "axios";
+
+const App = (props) => {
+  const [notes, setNotes] = useState([])
+  const [newNote, setNewNote] = useState('')
+  const [showAll, setShowAll] = useState(true)
+
+  // 如何使用filter
+  const notesToShow = showAll ? notes : notes.filter(note => note.important === true)
+
+  useEffect(() => {
+    console.log('effect')
+    axios
+      .get('http://localhost:3001/notes')
+      .then(response => {
+        console.log('promise fulfilled')
+        setNotes(response.data)
+      })
+  }, [])
+  console.log('render', notes.length, 'notes')
+
+  const addNote = (event) => {
+    event.preventDefault();
+    // 对象的操作
+    const noteObject = {
+      id: notes.length + 1,
+      content: newNote,
+      date: new Date().toISOString(),
+      important: false
+    }
+    // 新增数组 concat
+    setNotes(notes.concat(noteObject))
+    setNewNote("")
+  }
+  // 事件中取值
+  const handleChange = (event) => {
+    console.log(event.target.value)
+    setNewNote(event.target.value)
+  }
+
+  return (
+    <div>
+      <h1>Notes</h1>
+      <button onClick={() => {setShowAll(!showAll)}}>show{showAll ? true : false}</button>
+      <ul>
+        {
+          // 如何使用map
+          notesToShow.map(note => {
+            return <li key={note.id}>{note.content}</li>
+          })
+        }
+      </ul>
+      <form onSubmit={addNote}>
+        <input type="text" value={newNote} onChange={handleChange}/>
+        <button type="submit">提交</button>
+      </form>
+    </div>
+  )
+}
+
+export default App
+```
+
+我们可以用HTTP PUT请求来替换整个笔记，或者用HTTP PATCH请求只改变笔记的某些属性。
