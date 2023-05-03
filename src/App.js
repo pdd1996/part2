@@ -1,83 +1,83 @@
-import {useEffect, useState} from 'react'
-import Filter from "./conponents/Filter";
-import PersonForm from "./conponents/PersonForm";
-import Persons from "./conponents/Persons";
-import axios from "axios";
+import {useEffect, useState} from "react";
+import Note from "./conponents/Note";
+import noteService  from './services/notes'
+import './index.css'
 
 const App = () => {
   const [notes, setNotes] = useState([])
-  const [persons, setPersons] = useState([
-    { name: 'Arto Hellas', phone: '040-123456', id: 1 },
-    { name: 'Ada Lovelace', phone: '39-44-5323523', id: 2 },
-    { name: 'Dan Abramov', phone: '12-43-234345', id: 3 },
-    { name: 'Mary Poppendieck', phone: '39-23-6423122', id: 4 }
-  ])
-  const [newName, setNewName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [filterName, setFilterName] = useState('')
-  const [personList, setPersonList] = useState([])
+  const [newNote, setNewNote] = useState('')
+  const [showAll, setShowAll] = useState(true)
+
+  // 如何使用filter
+  const notesToShow = showAll ? notes : notes.filter(note => note.important === true)
 
   useEffect(() => {
-    console.log('effect')
-    axios
-      .get('http://localhost:3001/notes')
+    noteService
+      .getAll()
       .then(res => {
-        console.log('fulfilled')
         setNotes(res.data)
       })
   }, [])
-  console.log(notes.length, 'notes')
 
-  const handleChange = (e) => {
-    setNewName(e.target.value)
-  }
-
-  const handleChangeToPhone = (e) => {
-    setPhone(e.target.value)
-  }
-
-  const addPerson = (e) => {
-    e.preventDefault()
-    const isExist = persons.some(person => {
-      if (person.name === newName) {
-        alert(`${newName} is already added to phonebook`)
-        return true;
-      }
-      return false
-    })
-
-    if(!isExist) {
-      setPersons(persons.concat({
-        name: newName,
-        phone,
-        id: persons.length + 1
-      }))
-      setNewName('')
-      setPhone('')
+  const addNote = (event) => {
+    event.preventDefault();
+    // 对象的操作
+    const noteObject = {
+      id: notes.length + 1,
+      content: newNote,
+      date: new Date().toISOString(),
+      important: false
     }
+    noteService
+      .create(noteObject)
+      .then(res => {
+        // 新增数组 concat
+        setNotes(notes.concat(res.data))
+        setNewNote("")
+      })
+  }
+  // 事件中取值
+  const handleChange = (event) => {
+    console.log(event.target.value)
+    setNewNote(event.target.value)
   }
 
-  const toggleName = (e) => {
-    setFilterName(e.target.value)
-    const personList = persons.filter(person => {
-      // 都转成大写或者小写
-      return person.name.toUpperCase().match(e.target.value.toUpperCase())
-      }
-    )
-    setPersonList(personList)
+  const toggleImportanceOf = (id) => {
+    // put
+    const note = notes.find(note => note.id === id)
+    const changedNote = { ...note, important: !note.important }
+    noteService
+      .update(id, changedNote)
+      .then(res => {
+        console.log(res)
+        setNotes(notes.map(note => note.id !== id ? note : res.data))
+      })
+      .catch(error => {
+        console.log(error)
+        alert(
+          `the note '${note.content}' was already deleted from server`
+        )
+        setNotes(notes.filter(n => n.id !== id))
+      })
   }
 
   return (
     <div>
-      <h2>Phonebook</h2>
-      <div>
-        <p>filter shown with</p>
-        <Filter value={filterName} onChange={toggleName} list={personList} />
-      </div>
-      <h2>add a new</h2>
-      <PersonForm onSubmit={addPerson} toggleName={handleChange} toggleNumber={handleChangeToPhone} name={newName} number={phone} />
-      <h2>Numbers</h2>
-      <Persons values={persons} />
+      <h1>Notes</h1>
+      <button onClick={() => {setShowAll(!showAll)}}>show{showAll}</button>
+      <ul>
+        {notesToShow.map(note =>
+          <Note
+            key={note.id}
+            note={note}
+            toggleImportance={() => toggleImportanceOf(note.id)}
+          />
+        )}
+      </ul>
+      <form onSubmit={addNote}>
+        <input type="text" value={newNote} onChange={handleChange}/>
+        <button type="submit">提交</button>
+      </form>
     </div>
   )
 }
