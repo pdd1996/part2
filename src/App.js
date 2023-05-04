@@ -1,116 +1,96 @@
-import {useState} from "react";
-import axios from "axios";
-import Country from "./conponents/Country";
+import {useEffect, useRef, useState} from 'react'
+import Filter from "./conponents/Filter";
+import PersonForm from "./conponents/PersonForm";
+import Persons from "./conponents/Persons";
+import personService from './services/persons'
 
 const App = () => {
-  const [country, setCountry] = useState('')
-  const [countries, setCountries] = useState([])
-  const [info, setInfo] = useState('')
-  const [showCountries, setShowCountries] = useState([])
-  const api_key = process.env.REACT_APP_API_KEY
+  const [persons, setPersons] = useState([])
+  const [newName, setNewName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [filterName, setFilterName] = useState('')
+  const [personList, setPersonList] = useState([])
+  const refList = useRef([]);
 
-  const toggleCountry = (e) => {
-    const value = e.target.value
-    setCountry(value)
-    if (value) {
-      getAllCountries(value)
-    }
-    if (!value) {
-      setCountries([])
-      setInfo('')
-    }
-  }
-
-  const handleClick = (e) => {
-    const id = e.target.id
-
-    if (id) {
-      const country = countries.map(country => {
-        if(country.name.common.toUpperCase() === id.toUpperCase()) {
-          country.show = !country.show
-          getWeather(country)
-        }
-        return country
-      })
-      setShowCountries(country)
-    }
-  }
-
-  const getWeather = (country) => {
-    const url = "https://api.openweathermap.org/data/2.5/weather?q=" + country.capital + "&appid=" + api_key
-    console.log(url, "url")
-    axios.get(url)
+  useEffect(() => {
+    personService
+      .getAll()
       .then(res => {
-        console.log(res.data)
-        const {weather, wind, mian} = res.data
-        country.weather = weather
-        country.wind = wind
-        country.mian = mian
-        setShowCountries(country)
+        setPersons(res.data)
       })
       .catch(e => {
-        console.log(e, "e")
+        console.log(e)
       })
+  }, [])
+
+  const handleChange = (e) => {
+    setNewName(e.target.value)
   }
 
-  const getAllCountries = (value) => {
-    axios.get('https://restcountries.com/v3.1/all')
-      .then(res => {
-        const listForCountry = res.data
-        listForCountry.forEach(function (country) {
-          country.show = false
+  const handleChangeToPhone = (e) => {
+    setPhone(e.target.value)
+  }
+
+  const addPerson = (e) => {
+    e.preventDefault()
+    const isExist = persons.some(person => {
+      if (person.name === newName) {
+        alert(`${newName} is already added to phonebook`)
+        return true;
+      }
+      return false
+    })
+
+    if(!isExist) {
+      const person = {
+        name: newName,
+        number: phone,
+        id: persons.length + 1
+      }
+      personService
+        .create(person)
+        .then(res => {
+          setPersons(persons.concat(res.data))
         })
-        const remaining = listForCountry.filter(country => country.name.common.toUpperCase().match(value.toUpperCase()))
-        if (remaining.length === 0) {
-          setCountries([])
-          setInfo('not found')
-        }
-        if(remaining.length > 10) {
-          setCountries([])
-          setInfo('Too many match, specify another filter')
-        }
-        if (remaining.length <= 10 && remaining.length >= 1) {
-          setCountries(remaining)
-          setInfo('')
-        }
-      })
+        .catch(e => {
+          console.log(e)
+        })
+      setNewName('')
+      setPhone('')
+    }
+  }
+
+  const toggleName = (e) => {
+    setFilterName(e.target.value)
+    const personList = persons.filter(person => {
+        // 都转成大写或者小写
+        return person.name.toUpperCase().match(e.target.value.toUpperCase())
+      }
+    )
+    setPersonList(personList)
+  }
+
+  // ref 存在问题
+  const getRef=(dom)=>{
+    return refList.current.push(dom)
+  }
+
+  const handleClick = () => {
+    // console.log(personRef.current, "ref")
+    console.log(refList, "refList")
   }
 
   return (
     <div>
-      <p>find countries <input value={country} onChange={toggleCountry} /></p>
-      {
-        info && countries.length === 0 ? info : countries.map(state =>
-          <p key={state.capital}>{state.name.common}
-            <button id={state.name.common} onClick={e => handleClick(e)}>{state.show ? 'not show' : 'show'}</button>
-          </p>
-        )
-      }
-      {
-        showCountries.map(state => {
-          if (state.show) {
-            return(
-              <div key={state.capital}>
-                <Country state={state} />
-                <h2>Weather in {state.capital}</h2>
-                <p>temperature {state.main ? state.main.temp : ''} </p>
-                {
-                  state.weather ? state.weather.map(weather => {
-                    return(
-                      <div key={weather.id}>
-                        <img alt="weather" src={weather.icon}/>
-                        <p>description {weather.description}</p>
-                      </div>
-                    )
-                  }) : ''
-                }
-                <p>wind {state.wind ? state.wind.speed : ''}</p>
-              </div>
-            )
-          }
-          return ''
-        })
-      }
+      <h2>Phonebook</h2>
+      <div>
+        <p>filter shown with</p>
+        <Filter value={filterName} onChange={toggleName} list={personList} />
+      </div>
+      <h2>add a new</h2>
+      <PersonForm onSubmit={addPerson} toggleName={handleChange} toggleNumber={handleChangeToPhone} name={newName} number={phone} />
+      <h2>Numbers</h2>
+      <Persons values={persons} ref={getRef()} onClick={handleClick} />
     </div>
   )
 }

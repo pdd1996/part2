@@ -1,8 +1,11 @@
-const Persons = ({values}) => {
+const Persons = ({values, onClick}) => {
+
   return (
     <>
       {
-        values.map(person => <p key={person.id}>{person.name} - {person.number}</p>)
+        values.map(person => <p key={person.id}>{person.name} - {person.number}
+          <button onClick={onClick}>delete</button>
+        </p>)
       }
     </>
   )
