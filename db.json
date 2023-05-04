@@ -56,8 +56,8 @@
   ],
   "persons": [
     {
-      "name": "Arto Hellas",
-      "number": "040-123456",
+      "name": "Dan",
+      "number": "12-43-234345",
       "id": 1
     },
     {
@@ -71,24 +71,9 @@
       "id": 3
     },
     {
-      "name": "Mary Poppendieck",
-      "number": "39-23-6423122",
+      "name": "jj",
+      "number": "3211231",
       "id": 4
-    },
-    {
-      "name": "China",
-      "number": "123456",
-      "id": 5
-    },
-    {
-      "name": "ABC",
-      "number": "1234567890",
-      "id": 6
-    },
-    {
-      "name": "CBA",
-      "number": "12345678999",
-      "id": 7
     }
   ]
 }
