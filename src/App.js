@@ -6,12 +6,10 @@ const App = () => {
   const [country, setCountry] = useState('')
   const [countries, setCountries] = useState([])
   const [info, setInfo] = useState('')
-  const [show, setShow] = useState(false)
-  const [weather, setWeather] = useState("")
+  const [showCountries, setShowCountries] = useState([])
 
   const toggleCountry = (e) => {
     const value = e.target.value
-    console.log(value, "value")
     setCountry(value)
     if (value) {
       getAllCountries(value)
@@ -22,16 +20,27 @@ const App = () => {
     }
   }
 
-  const handleClick = () => {
-    setShow(!show)
+  const handleClick = (e) => {
+    const id = e.target.id
+    if (id) {
+      const country = countries.map(country => {
+        if(country.name.common.toUpperCase() === id.toUpperCase()) {
+          country.show = !country.show
+        }
+        return country
+      })
+      setShowCountries(country)
+    }
   }
 
   const getAllCountries = (value) => {
     axios.get('https://restcountries.com/v3.1/all')
       .then(res => {
         const listForCountry = res.data
+        listForCountry.forEach(function (country) {
+          country.show = false
+        })
         const remaining = listForCountry.filter(country => country.name.common.toUpperCase().match(value.toUpperCase()))
-        console.log(remaining, "remaining")
         if (remaining.length === 0) {
           setCountries([])
           setInfo('not found')
@@ -43,15 +52,6 @@ const App = () => {
         if (remaining.length <= 10 && remaining.length >= 1) {
           setCountries(remaining)
           setInfo('')
-          if(remaining.length == 1) {
-            console.log(remaining, "remaining")
-            const url = `https://api.openweathermap.org/data/2.5/weather?q=${remaining[0].name.common}&appid="t0p53cr3t4p1k3yv4lu3"`
-            console.log(url, "url")
-            axios
-              .get(url)
-              .then(res => {})
-
-          }
         }
       })
   }
@@ -60,15 +60,22 @@ const App = () => {
     <div>
       <p>find countries <input value={country} onChange={toggleCountry} /></p>
       {
-        info && countries.length === 0 ? info : countries.map(state => <p key={state.capital}>{state.name.common}<button onClick={handleClick}>show</button></p> )
+        info && countries.length === 0 ? info : countries.map(state =>
+          <p key={state.capital}>{state.name.common}
+            <button id={state.name.common} onClick={e => handleClick(e)}>{state.show ? 'not show' : 'show'}</button>
+          </p>
+        )
       }
       {
-        countries.length === 1 ? countries.map(state =>
-          <>
-            <Country state={state} />
-          </>
-
-        ) : ''
+        showCountries.map(state => {
+          if (state.show) {
+            return(
+              <div key={state.capital}>
+                <Country state={state} />
+              </div>
+            )
+          }
+        })
       }
     </div>
   )
