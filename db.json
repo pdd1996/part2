@@ -57,7 +57,7 @@
   "persons": [
     {
       "name": "Dan",
-      "number": "12-43-234345",
+      "number": "1234",
       "id": 1
     },
     {
@@ -69,11 +69,6 @@
       "name": "Dan Abramov",
       "number": "12-43-234345",
       "id": 3
-    },
-    {
-      "name": "jj",
-      "number": "3211231",
-      "id": 4
     }
   ]
 }
