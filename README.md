@@ -454,3 +454,11 @@ export default App
 ```
 
 我们可以用HTTP PUT请求来替换整个笔记，或者用HTTP PATCH请求只改变笔记的某些属性。
+
+### 如果包错误
+```npm
+rm -rf package-lock.json
+rm -rf node_modules
+npm cache clean --force
+npm install
+```
